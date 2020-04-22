@@ -1,4 +1,4 @@
-package com.riccardocalligaro.imdbmovies.presentation.feature.dashboard.model
+package com.riccardocalligaro.imdbmovies.presentation.feature.dashboard.feed.model
 
 import com.riccardocalligaro.imdbmovies.domain.model.MovieDomainModel
 

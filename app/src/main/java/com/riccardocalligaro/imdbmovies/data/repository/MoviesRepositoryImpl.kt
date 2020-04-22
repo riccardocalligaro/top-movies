@@ -8,11 +8,12 @@ import com.riccardocalligaro.imdbmovies.data.local.dao.MovieDao
 import com.riccardocalligaro.imdbmovies.data.local.entity.MovieLocalModel
 import com.riccardocalligaro.imdbmovies.data.local.entity.toDomainModel
 import com.riccardocalligaro.imdbmovies.data.remote.IMDbService
+import com.riccardocalligaro.imdbmovies.domain.model.FeedItemDomainModel
 import com.riccardocalligaro.imdbmovies.domain.model.MovieDomainModel
 import com.riccardocalligaro.imdbmovies.domain.repository.MoviesRepository
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
 import kotlin.time.ExperimentalTime
@@ -31,38 +32,44 @@ class MoviesRepositoryImpl(
     }
 
     @ExperimentalTime
-    override fun getTopMovies(): Flow<Resource<List<MovieDomainModel>>> {
+    @ExperimentalCoroutinesApi
+    @FlowPreview
+    override fun getTopMovies(): Flow<Resource<List<FeedItemDomainModel>>> {
+        return object : NetworkBoundResource<List<MovieLocalModel>, List<FeedItemDomainModel>>() {
 
-        return object : NetworkBoundResource<List<MovieDomainModel>, List<MovieLocalModel>>() {
-            override fun fetchFromLocal(): Flow<List<MovieDomainModel>> {
-                Timber.i("Fetching from local...")
+            override fun shouldFetch(data: List<FeedItemDomainModel>): Boolean {
+                return shouldFetchFromRemote(data)
+            }
 
+            override fun query(): Flow<List<FeedItemDomainModel>> {
+                Timber.i("Quering from database")
                 return movieDao.getAllMovies().map {
-                    it.map { local ->
-                        local.toDomainModel()
-                    }
+                    convertToFeed(it)
                 }
             }
 
-            override suspend fun fetchFromRemote(): List<MovieLocalModel> {
-                Timber.i("Fetching from remote...")
+            override suspend fun fetch(): List<MovieLocalModel> {
+                Timber.i("Fetching from remote")
                 return imDbService.getTopMovies()
             }
 
-            override fun saveRemoteData(data: List<MovieLocalModel>) {
-                Timber.i("Saving remote...")
-                movieDao.insertAllMovies(data)
+            override suspend fun saveFetchResult(data: List<MovieLocalModel>) {
                 sharedPreferences.edit {
                     putLong(KEY_LAST_SYNCED, System.currentTimeMillis())
                 }
+                return movieDao.insertAllMovies(data)
             }
 
-            override fun shouldFetchFromRemote(data: List<MovieDomainModel>): Boolean {
-                val lastSynced = sharedPreferences.getLong(KEY_LAST_SYNCED, -1)
-                return lastSynced == -1L || data.isNullOrEmpty() || isExpired(lastSynced)
-            }
+        }.asFlow()
+    }
 
-        }.asFlow().flowOn(Dispatchers.IO)
+
+    @ExperimentalTime
+    private fun shouldFetchFromRemote(movies: List<FeedItemDomainModel>): Boolean {
+        val lastSynced: Long = sharedPreferences.getLong(KEY_LAST_SYNCED, -1)
+        return lastSynced == -1L ||
+                movies.isNullOrEmpty() ||
+                isExpired(lastSynced)
     }
 
 
@@ -71,4 +78,27 @@ class MoviesRepositoryImpl(
         val currentTime = System.currentTimeMillis()
         return (currentTime - lastSynced) >= MOVIE_EXPIRY_IN_MILLIS
     }
+
+
+    private fun convertToFeed(movies: List<MovieLocalModel>): List<FeedItemDomainModel> {
+        val genreSet = mutableSetOf<String>()
+        for (movie in movies) {
+            for (genre in movie.genres) {
+                genreSet.add(genre)
+            }
+        }
+        val feedItems = mutableListOf<FeedItemDomainModel>()
+        for ((index, genre) in genreSet.withIndex()) {
+            val genreMovies: List<MovieDomainModel> = movies
+                .filter { it.genres.contains(genre) }.map {
+                    it.toDomainModel()
+                }
+            feedItems.add(FeedItemDomainModel(index.toLong(), genre, genreMovies.shuffled()))
+        }
+
+        return feedItems
+
+    }
+
+
 }

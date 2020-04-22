@@ -2,6 +2,7 @@
   <dictionary name="Riccardo">
     <words>
       <w>coroutines</w>
+      <w>debouncer</w>
       <w>imdb</w>
       <w>imdbmovies</w>
       <w>kodein</w>

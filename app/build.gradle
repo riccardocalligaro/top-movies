@@ -2,10 +2,15 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
+apply plugin: 'androidx.navigation.safeargs.kotlin'
+// apply plugin: "androidx.navigation.safeargs"
 
 
 android {
 
+    dataBinding {
+        enabled = true
+    }
 
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
@@ -38,6 +43,7 @@ android {
 
 }
 
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -58,7 +64,7 @@ dependencies {
 
     // retrofit
     implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
-    implementation 'com.squareup.okhttp3:logging-interceptor:4.2.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.3.1'
     implementation "com.squareup.moshi:moshi-kotlin:$moshi_version"
     implementation "com.squareup.retrofit2:converter-moshi:$moshi_converter_version"
 
@@ -67,6 +73,8 @@ dependencies {
     implementation "androidx.room:room-runtime:$room_version"
     implementation "androidx.room:room-ktx:$room_version"
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0'
     kapt "androidx.room:room-compiler:$room_version"
 
     // kodein
@@ -80,11 +88,15 @@ dependencies {
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
 
+
     // timber logging
     implementation 'com.jakewharton.timber:timber:4.7.1'
 
+    implementation 'com.github.bumptech.glide:glide:4.11.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
 
-    testImplementation 'junit:junit:4.12'
+
+    testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }

@@ -19,6 +19,7 @@ class NavHostActivity : AppCompatActivity() {
     private fun setupBottomNavigationView() {
         // get the nav controller from the fragment
         val navController = nav_host_fragment.findNavController()
+
         // set it to the bottom nav view
         bottom_nav_view.setupWithNavController(navController)
     }

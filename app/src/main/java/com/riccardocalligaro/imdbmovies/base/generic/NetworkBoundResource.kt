@@ -1,59 +1,41 @@
 package com.riccardocalligaro.imdbmovies.base.generic
 
-import androidx.annotation.MainThread
-import androidx.annotation.WorkerThread
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
 
-abstract class NetworkBoundResource<DB, REMOTE> {
 
-    @MainThread
-    abstract fun fetchFromLocal(): Flow<DB>
+abstract class NetworkBoundResource<DATA, DOMAIN> {
 
-    @MainThread
-    abstract suspend fun fetchFromRemote(): REMOTE
-
-    @WorkerThread
-    abstract fun saveRemoteData(data: REMOTE)
-
-    @MainThread
-    abstract fun shouldFetchFromRemote(data: DB): Boolean
-
+    @FlowPreview
     @ExperimentalCoroutinesApi
-    fun asFlow() = flow<Resource<DB>> {
-
-        Timber.d("Starting...")
-        // sending loading status
-        Timber.d("Sending loading...")
-        emit(Resource.loading())
-
-        val localData = fetchFromLocal().first()
-
-        // checking if local data is staled
-        if (shouldFetchFromRemote(localData)) {
-            try {
-                val fetchedData = fetchFromRemote()
-                saveRemoteData(fetchedData)
-                emitLocalDbData()
-            } catch (throwable: Throwable) {
-                Timber.e(throwable)
-                emit(Resource.error(throwable.message!!))
+    fun asFlow(): Flow<Resource<DOMAIN>> = flow {
+        val flow = query()
+            .onStart { emit(Resource.loading<DOMAIN>(null)) }
+            .flatMapConcat { data ->
+                if (shouldFetch(data)) {
+                    emit(Resource.loading(data))
+                    try {
+                        saveFetchResult(fetch())
+                        query().map { Resource.success(it) }
+                    } catch (throwable: Throwable) {
+                        onFetchFailed(throwable)
+                        query().map { Resource.error(throwable.message!!, it) }
+                    }
+                } else {
+                    query().map { Resource.success(it) }
+                }
             }
-
-        } else {
-            Timber.i("Fetching from local")
-            // valid cache, no need to fetch from remote.
-            emitLocalDbData()
-        }
+        emitAll(flow)
     }
 
-    @ExperimentalCoroutinesApi
-    private suspend fun FlowCollector<Resource<DB>>.emitLocalDbData() {
-        Timber.i("Sending local data to UI")
-        emitAll(fetchFromLocal().map { dbData ->
-            Timber.i("Sending local...")
-            Resource.success(dbData)
-        })
-    }
+    abstract fun query(): Flow<DOMAIN>
+
+    abstract suspend fun fetch(): DATA
+
+    abstract suspend fun saveFetchResult(data: DATA)
+
+    open fun onFetchFailed(throwable: Throwable) = Unit
+
+    open fun shouldFetch(data: DOMAIN) = true
 }

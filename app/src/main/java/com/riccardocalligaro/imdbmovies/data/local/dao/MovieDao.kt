@@ -13,8 +13,8 @@ interface MovieDao {
     fun getAllMovies(): Flow<List<MovieLocalModel>>
 
     @Query("delete from movies")
-    fun deleteAllMovies()
+    suspend fun deleteAllMovies()
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertAllMovies(movies: List<MovieLocalModel>)
+    suspend fun insertAllMovies(movies: List<MovieLocalModel>)
 }

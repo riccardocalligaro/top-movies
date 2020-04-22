@@ -1,5 +1,9 @@
 package com.riccardocalligaro.imdbmovies.domain.model
 
+import android.os.Parcelable
+import kotlinx.android.parcel.Parcelize
+
+@Parcelize
 data class MovieDomainModel(
     val id: Long,
     val actors: List<String>,
@@ -11,4 +15,4 @@ data class MovieDomainModel(
     val imdbUrl: String,
     val name: String,
     val rating: Float
-)
+) : Parcelable

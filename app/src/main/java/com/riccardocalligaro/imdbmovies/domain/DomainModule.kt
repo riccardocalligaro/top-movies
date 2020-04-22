@@ -8,6 +8,9 @@ import org.koin.dsl.module
 object DomainModule {
     val domainModule = module {
         single<MoviesRepository> { MoviesRepositoryImpl(get(), get(), get()) }
+
         factory { GetTopMoviesUseCase(get()) }
+
+
     }
 }

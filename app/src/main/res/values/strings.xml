@@ -2,4 +2,5 @@
     <string name="app_name">IMDb Movies</string>
     <string name="home">Home</string>
     <string name="saved">Saved</string>
+    <string name="error_feed">Error while fetching movies</string>
 </resources>

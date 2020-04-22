@@ -9,16 +9,20 @@ import kotlin.properties.Delegates
 abstract class BaseViewModel<ViewState : BaseViewState, ViewAction : BaseAction>(initialState: ViewState) :
     ViewModel() {
 
-    private val stateMutableLiveData = MutableLiveData<ViewState>()
+
+    private val stateMutableLiveData = MutableLiveData<ViewState>(initialState)
     val stateLiveData = stateMutableLiveData.toLiveData()
     private var stateTimeTravelDebugger: StateTimeTravelDebugger? = null
+
+//    init {
+//        stateMutableLiveData.value = initialState
+//    }
 
     init {
         if (BuildConfig.DEBUG) {
             stateTimeTravelDebugger = StateTimeTravelDebugger(this::class.java.simpleName)
         }
     }
-
 
     // Delegate will handle state event deduplication
     // (multiple states of the same type holding the same data will not be dispatched multiple times to LiveData stream)
