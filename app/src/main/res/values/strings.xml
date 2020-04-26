@@ -3,4 +3,5 @@
     <string name="home">Home</string>
     <string name="saved">Saved</string>
     <string name="error_feed">Error while fetching movies</string>
+    <string name="error_saved_movies">Error while loading saved movies</string>
 </resources>

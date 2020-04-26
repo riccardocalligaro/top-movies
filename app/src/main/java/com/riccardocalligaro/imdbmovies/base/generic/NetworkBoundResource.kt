@@ -5,7 +5,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 
 
-abstract class NetworkBoundResource<DATA, DOMAIN> {
+abstract class NetworkBoundResource<NETWORK, DOMAIN> {
 
     @FlowPreview
     @ExperimentalCoroutinesApi
@@ -14,7 +14,6 @@ abstract class NetworkBoundResource<DATA, DOMAIN> {
             .onStart { emit(Resource.loading<DOMAIN>(null)) }
             .flatMapConcat { data ->
                 if (shouldFetch(data)) {
-                    emit(Resource.loading(data))
                     try {
                         saveFetchResult(fetch())
                         query().map { Resource.success(it) }
@@ -31,9 +30,9 @@ abstract class NetworkBoundResource<DATA, DOMAIN> {
 
     abstract fun query(): Flow<DOMAIN>
 
-    abstract suspend fun fetch(): DATA
+    abstract suspend fun fetch(): NETWORK
 
-    abstract suspend fun saveFetchResult(data: DATA)
+    abstract suspend fun saveFetchResult(data: NETWORK)
 
     open fun onFetchFailed(throwable: Throwable) = Unit
 

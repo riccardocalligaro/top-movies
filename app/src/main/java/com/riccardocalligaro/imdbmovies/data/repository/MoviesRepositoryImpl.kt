@@ -8,6 +8,8 @@ import com.riccardocalligaro.imdbmovies.data.local.dao.MovieDao
 import com.riccardocalligaro.imdbmovies.data.local.entity.MovieLocalModel
 import com.riccardocalligaro.imdbmovies.data.local.entity.toDomainModel
 import com.riccardocalligaro.imdbmovies.data.remote.IMDbService
+import com.riccardocalligaro.imdbmovies.data.remote.model.MovieRemoteModel
+import com.riccardocalligaro.imdbmovies.data.remote.model.toLocalModel
 import com.riccardocalligaro.imdbmovies.domain.model.FeedItemDomainModel
 import com.riccardocalligaro.imdbmovies.domain.model.MovieDomainModel
 import com.riccardocalligaro.imdbmovies.domain.repository.MoviesRepository
@@ -35,7 +37,7 @@ class MoviesRepositoryImpl(
     @ExperimentalCoroutinesApi
     @FlowPreview
     override fun getTopMovies(): Flow<Resource<List<FeedItemDomainModel>>> {
-        return object : NetworkBoundResource<List<MovieLocalModel>, List<FeedItemDomainModel>>() {
+        return object : NetworkBoundResource<List<MovieRemoteModel>, List<FeedItemDomainModel>>() {
 
             override fun shouldFetch(data: List<FeedItemDomainModel>): Boolean {
                 return shouldFetchFromRemote(data)
@@ -48,19 +50,40 @@ class MoviesRepositoryImpl(
                 }
             }
 
-            override suspend fun fetch(): List<MovieLocalModel> {
+            override suspend fun fetch(): List<MovieRemoteModel> {
                 Timber.i("Fetching from remote")
                 return imDbService.getTopMovies()
             }
 
-            override suspend fun saveFetchResult(data: List<MovieLocalModel>) {
+            override suspend fun saveFetchResult(data: List<MovieRemoteModel>) {
+                val savedMovies = movieDao.getSavedMovies()
+
+
+                movieDao.insertAllMovies(data.map {
+                    it.toLocalModel()
+                })
+
+                movieDao.updateSavedMovies(savedMovies.map { it.id })
+
                 sharedPreferences.edit {
                     putLong(KEY_LAST_SYNCED, System.currentTimeMillis())
                 }
-                return movieDao.insertAllMovies(data)
             }
 
         }.asFlow()
+    }
+
+    override suspend fun saveMovie(movie: MovieDomainModel) {
+        return movieDao.saveMovie(movie.id)
+    }
+
+    override suspend fun discardMovie(movie: MovieDomainModel) {
+        return movieDao.discardMovie(movie.id)
+    }
+
+
+    override suspend fun getSavedMovies(): List<MovieDomainModel> {
+        return movieDao.getSavedMovies().map { it.toDomainModel() }
     }
 
 

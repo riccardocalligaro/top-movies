@@ -8,7 +8,7 @@ import com.riccardocalligaro.imdbmovies.data.local.entity.MovieLocalModel
 
 @Database(
     entities = [MovieLocalModel::class],
-    version = 1
+    version = 4
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {

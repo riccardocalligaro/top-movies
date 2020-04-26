@@ -4,29 +4,52 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.riccardocalligaro.imdbmovies.R
+import com.riccardocalligaro.imdbmovies.databinding.SavedFragmentBinding
+import com.riccardocalligaro.imdbmovies.presentation.feature.saved.recyclerview.SavedMovieAdapter
+import kotlinx.android.synthetic.main.saved_fragment.*
+import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class SavedFragment : Fragment() {
 
-    companion object {
-        fun newInstance() = SavedFragment()
-    }
 
-    private lateinit var viewModel: SavedViewModel
+    private val savedViewModel: SavedViewModel by viewModel()
+
+    private val savedMovieAdapter: SavedMovieAdapter by inject()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.saved_fragment, container, false)
+
+        val binding: SavedFragmentBinding =
+            DataBindingUtil.inflate(inflater, R.layout.saved_fragment, container, false)
+
+        binding.lifecycleOwner = this
+        binding.viewState = savedViewModel.stateLiveData.value
+
+        savedViewModel.stateLiveData.observe(viewLifecycleOwner, Observer {
+            binding.viewState = it
+            savedMovieAdapter.savedMovies = it.savedMovies
+        })
+
+        return binding.root
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this).get(SavedViewModel::class.java)
-        // TODO: Use the ViewModel
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        savedMoviesRecyclerView.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = savedMovieAdapter
+        }
+
     }
+
 
 }

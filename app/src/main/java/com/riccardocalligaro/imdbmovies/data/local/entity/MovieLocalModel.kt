@@ -5,7 +5,6 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.riccardocalligaro.imdbmovies.domain.model.MovieDomainModel
-import com.squareup.moshi.Json
 import java.io.Serializable
 
 
@@ -17,19 +16,20 @@ import java.io.Serializable
 )
 data class MovieLocalModel(
     val actors: List<String>,
-    @Json(name = "desc")
+//    @Json(name = "desc")
     val description: String,
     val directors: List<String>,
-    @Json(name = "genre")
+//    @Json(name = "genre")
     val genres: List<String>,
-    @Json(name = "image_url")
+//    @Json(name = "image_url")
     val imageUrl: String,
-    @Json(name = "thumb_url")
+//    @Json(name = "thumb_url")
     val thumbUrl: String,
-    @Json(name = "imdb_url")
+//    @Json(name = "imdb_url")
     val imdbUrl: String,
     val name: String,
-    val rating: Float
+    val rating: Float,
+    val saved: Boolean = false
 ) : Serializable {
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
@@ -39,6 +39,6 @@ data class MovieLocalModel(
 
 internal fun MovieLocalModel.toDomainModel(): MovieDomainModel {
     return MovieDomainModel(
-        id, actors, description, directors, genres, imageUrl, thumbUrl, imdbUrl, name, rating
+        id, actors, description, directors, genres, imageUrl, thumbUrl, imdbUrl, name, rating, saved
     )
 }

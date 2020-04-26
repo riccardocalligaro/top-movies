@@ -36,7 +36,8 @@ object DataModule {
 
 
     private fun provideAppDatabase(context: Context): AppDatabase {
-        return Room.databaseBuilder(context, AppDatabase::class.java, "imdbmovies.db").build()
+        return Room.databaseBuilder(context, AppDatabase::class.java, "imdbmovies.db")
+            .fallbackToDestructiveMigration().build()
     }
 
 

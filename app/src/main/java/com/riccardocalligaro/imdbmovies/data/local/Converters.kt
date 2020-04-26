@@ -12,4 +12,6 @@ class Converters {
     fun fromStringToList(string: String): List<String> {
         return string.split(",")
     }
+
+
 }

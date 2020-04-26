@@ -25,12 +25,12 @@ fun setImageUrlProgressiveLoading(imageView: ImageView, url: String?, thumbnailU
 
 
         Glide.with(imageView.context)
-            .load(url)
-            .thumbnail(
-                Glide.with(imageView.context).load(
-                    thumbnailUrl
-                ).transition(DrawableTransitionOptions.withCrossFade())
-            )
+            .load(thumbnailUrl)
+//            .thumbnail(
+//                Glide.with(imageView.context).load(
+//                    thumbnailUrl
+//                ).transition(DrawableTransitionOptions.withCrossFade())
+//            )
             .transition(DrawableTransitionOptions.withCrossFade())
             .into(imageView)
     }
